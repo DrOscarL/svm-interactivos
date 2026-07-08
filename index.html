@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IoT ML — Exploradores Interactivos</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0A0E1A;--surface:#111827;--card:#1F2937;
+  --border:#374151;--text:#F9FAFB;--muted:#9CA3AF;
+  --teal:#00C2A8;--orange:#FF7043;--purple:#A855F7;
+  --blue:#5B7FFF;--green:#22C55E;--amber:#D97706;
+}
+body{background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  min-height:100vh}
+
+header{background:var(--surface);border-bottom:1px solid var(--border);
+  padding:1rem 1.5rem;display:flex;align-items:center;gap:1rem}
+.logo{width:38px;height:38px;background:linear-gradient(135deg,var(--teal),var(--purple));
+  border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+header h1{font-size:16px;font-weight:600}
+header p{font-size:12px;color:var(--muted);margin-top:2px}
+
+main{max-width:900px;margin:0 auto;padding:2rem 1rem}
+
+.hero{text-align:center;margin-bottom:2.5rem}
+.hero h2{font-size:28px;font-weight:700;margin-bottom:.5rem}
+.hero p{font-size:14px;color:var(--muted);max-width:500px;margin:0 auto}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem}
+
+.widget-card{background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:1.25rem;text-decoration:none;color:var(--text);display:block;
+  transition:border-color .2s,transform .15s}
+.widget-card:hover{border-color:var(--muted);transform:translateY(-2px)}
+
+.card-icon{width:44px;height:44px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;margin-bottom:.85rem}
+
+.card-tag{display:inline-block;padding:2px 10px;border-radius:20px;
+  font-size:10px;font-weight:600;letter-spacing:.05em;margin-bottom:.5rem}
+
+.widget-card h3{font-size:15px;font-weight:600;margin-bottom:.4rem}
+.widget-card p{font-size:12.5px;color:var(--muted);line-height:1.6}
+
+.features{display:flex;flex-wrap:wrap;gap:5px;margin-top:.75rem}
+.feat{font-size:10.5px;padding:2px 8px;background:var(--surface);
+  border:1px solid var(--border);border-radius:20px;color:var(--muted)}
+
+footer{text-align:center;padding:1.5rem;font-size:11px;
+  color:var(--muted);border-top:1px solid var(--border);margin-top:2rem}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🤖</div>
+  <div>
+    <h1>Especialización IoT · Machine Learning</h1>
+    <p>Dr. Oscar Loyola Valenzuela · Exploradores interactivos</p>
+  </div>
+</header>
+
+<main>
+  <div class="hero">
+    <h2>Exploradores de la clase</h2>
+    <p>Herramientas interactivas para entender los algoritmos de ML en el contexto de sistemas IoT.</p>
+  </div>
+
+  <div class="grid">
+
+    <a class="widget-card" href="optimizacion.html">
+      <div class="card-icon" style="background:rgba(168,85,247,0.15)">⚙️</div>
+      <div class="card-tag" style="background:rgba(168,85,247,0.15);color:var(--purple)">SEMANA 5</div>
+      <h3>Optimización para SVM</h3>
+      <p>Del descenso por gradiente sin restricciones al margen máximo. Visualiza por qué los vectores de soporte tienen λ > 0.</p>
+      <div class="features">
+        <span class="feat">Sin restricciones</span>
+        <span class="feat">Con restricción</span>
+        <span class="feat">Margen SVM</span>
+        <span class="feat">Animado</span>
+      </div>
+    </a>
+
+    <a class="widget-card" href="svm_explorer.html">
+      <div class="card-icon" style="background:rgba(91,127,255,0.15)">🔵</div>
+      <div class="card-tag" style="background:rgba(91,127,255,0.15);color:var(--blue)">SEMANA 5</div>
+      <h3>Explorador SVM</h3>
+      <p>Ajusta C, γ y el kernel en tiempo real. Observa cómo cambia la frontera de decisión, el margen y los vectores de soporte con datos IoT.</p>
+      <div class="features">
+        <span class="feat">Kernel lineal</span>
+        <span class="feat">RBF</span>
+        <span class="feat">Polinomial</span>
+        <span class="feat">3 datasets</span>
+      </div>
+    </a>
+
+    <a class="widget-card" href="arboles.html">
+      <div class="card-icon" style="background:rgba(217,119,6,0.15)">🌳</div>
+      <div class="card-tag" style="background:rgba(217,119,6,0.15);color:var(--amber)">SEMANA 4</div>
+      <h3>Explorador de Árboles</h3>
+      <p>Ajusta max_depth, min_samples_leaf y criterion. Visualiza la frontera de decisión, la curva de overfitting y las reglas IF-THEN.</p>
+      <div class="features">
+        <span class="feat">Frontera</span>
+        <span class="feat">Overfitting</span>
+        <span class="feat">Reglas IF-THEN</span>
+        <span class="feat">Árbol visual</span>
+      </div>
+    </a>
+
+  </div>
+</main>
+
+<footer>
+  Especialización IoT · Machine Learning · Dr. Oscar Loyola Valenzuela
+</footer>
+
+</body>
+</html>
