@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Material interactivo sobre SVM</title>
+<style>
+:root{
+  --bg:#0f172a; --panel:#111827; --panel2:#1f2937; --border:rgba(148,163,184,.28);
+  --text:#f8fafc; --muted:#cbd5e1; --soft:#94a3b8; --accent:#A855F7;
+  font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:linear-gradient(135deg,#0f172a 0%,#111827 55%,#18122b 100%);color:var(--text)}
+main{width:min(1040px,calc(100% - 32px));margin:0 auto;padding:48px 0}
+.badge{display:inline-block;color:#c4b5fd;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+h1{font-size:clamp(30px,5vw,54px);line-height:1.02;margin:0;letter-spacing:-.05em;max-width:850px}
+.lead{color:var(--muted);font-size:17px;line-height:1.7;max-width:780px;margin:18px 0 32px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:26px}
+.card{position:relative;overflow:hidden;background:rgba(17,24,39,.88);border:1px solid var(--border);border-radius:20px;padding:24px;min-height:260px;box-shadow:0 18px 45px rgba(0,0,0,.25)}
+.card:before{content:"";position:absolute;inset:-70px -70px auto auto;width:180px;height:180px;background:radial-gradient(circle,rgba(168,85,247,.28),transparent 68%)}
+.number{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:rgba(168,85,247,.18);border:1px solid rgba(168,85,247,.3);color:#e9d5ff;font-weight:800;margin-bottom:18px}
+h2{margin:0 0 10px;font-size:24px;letter-spacing:-.03em}
+p{color:var(--muted);line-height:1.65;margin:0 0 22px}
+a.button{display:inline-flex;align-items:center;gap:8px;color:white;text-decoration:none;background:var(--accent);border-radius:999px;padding:10px 16px;font-weight:700;box-shadow:0 10px 22px rgba(168,85,247,.28)}
+a.button:hover{filter:brightness(1.08)}
+.meta{color:var(--soft);font-size:13px;margin-top:18px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}main{padding:32px 0}.card{min-height:auto}}
+</style>
+</head>
+<body>
+<main>
+  <span class="badge">Recursos docentes interactivos</span>
+  <h1>Material visual sobre SVM, optimización y clasificación IoT</h1>
+  <p class="lead">Sitio estático preparado para GitHub Pages. Cada visualización funciona como una página HTML autónoma, con estilos propios y sin dependencias externas.</p>
+  <section class="grid">
+    <article class="card">
+      <div class="number">01</div>
+      <h2>Explorador SVM para datos IoT</h2>
+      <p>Permite modificar C, gamma, kernel y dataset para observar la frontera de decisión, el margen y los vectores de soporte.</p>
+      <a class="button" href="svm_explorer_iot.html">Abrir visualización →</a>
+      <div class="meta">Recomendado para introducir clasificación supervisada y efecto de hiperparámetros.</div>
+    </article>
+    <article class="card">
+      <div class="number">02</div>
+      <h2>Optimización visual aplicada a SVM</h2>
+      <p>Conecta descenso de gradiente, restricciones activas, multiplicadores de Lagrange y margen máximo en SVM.</p>
+      <a class="button" href="optimizacion_svm_visual.html">Abrir visualización →</a>
+      <div class="meta">Recomendado para explicar la base matemática antes de usar librerías.</div>
+    </article>
+  </section>
+</main>
+</body>
+</html>

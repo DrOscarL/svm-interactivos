@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Optimización visual aplicada a SVM</title>
+
+<style>
+:root{
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  --surface-0:#0f172a;
+  --surface-1:#111827;
+  --surface-2:#1f2937;
+  --surface-3:#263244;
+  --border:rgba(148,163,184,.28);
+  --text-primary:#f8fafc;
+  --text-secondary:#cbd5e1;
+  --text-muted:#94a3b8;
+  --accent:#A855F7;
+}
+*{box-sizing:border-box}
+html{min-height:100%;background:linear-gradient(135deg,#0f172a 0%,#111827 55%,#18122b 100%);}
+body{
+  margin:0;
+  min-height:100vh;
+  font-family:var(--font-sans);
+  background:transparent;
+  color:var(--text-primary);
+}
+a{color:#a78bfa;text-decoration:none}
+a:hover{text-decoration:underline}
+.page{
+  width:min(1120px, calc(100% - 32px));
+  margin:0 auto;
+  padding:32px 0 44px;
+}
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:16px;
+  margin-bottom:20px;
+}
+.kicker{
+  color:#c4b5fd;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  margin-bottom:6px;
+}
+h1{
+  margin:0;
+  font-size:clamp(24px, 3.5vw, 38px);
+  line-height:1.08;
+  letter-spacing:-.04em;
+}
+.subtitle{
+  margin:10px 0 0;
+  color:var(--text-secondary);
+  max-width:820px;
+  font-size:15px;
+  line-height:1.65;
+}
+.backlink{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  white-space:nowrap;
+  color:var(--text-secondary);
+  border:1px solid var(--border);
+  border-radius:999px;
+  padding:8px 12px;
+  background:rgba(15,23,42,.45);
+}
+.backlink:hover{color:var(--text-primary);text-decoration:none;background:rgba(31,41,55,.8)}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.root{
+  width:100%;
+  max-width:100%;
+}
+button{
+  font-family:var(--font-sans);
+  background:var(--surface-2);
+  color:var(--text-primary);
+  border:1px solid var(--border);
+  border-radius:8px;
+  cursor:pointer;
+}
+button:hover{background:var(--surface-3)}
+canvas{max-width:100%;height:auto;}
+@media (max-width: 780px){
+  .topbar{flex-direction:column}
+  .grid2{grid-template-columns:1fr!important;}
+  .tabs{width:100%!important;display:grid!important;grid-template-columns:1fr!important;}
+  .tab{width:100%}
+  .ctrl{align-items:flex-start!important;flex-direction:column!important;gap:6px!important}
+  .ctrl input[type=range]{width:100%}
+  .legend{font-size:11px!important}
+}
+</style>
+</head>
+<body>
+<main class="page">
+  <div class="topbar">
+    <div>
+      <div class="kicker">Fundamento matemático</div>
+      <h1>Optimización visual aplicada a SVM</h1>
+      <p class="subtitle">Explora descenso de gradiente, restricciones activas y margen máximo para conectar la optimización cuadrática con la interpretación geométrica de SVM.</p>
+    </div>
+    <a class="backlink" href="index.html">← Volver al inicio</a>
+  </div>
+
+<h2 class="sr-only">Visualización interactiva de optimización con y sin restricciones, conectada al problema de SVM. Muestra cómo el gradiente desciende hacia el mínimo y cómo una restricción activa detiene la solución en el borde.</h2>
+
+<style>
+.root{padding:1rem 0;font-family:var(--font-sans)}
+.tabs{display:flex;gap:4px;background:var(--surface-1);border-radius:10px;padding:4px;margin-bottom:1rem;width:fit-content}
+.tab{padding:5px 16px;border-radius:7px;font-size:13px;cursor:pointer;color:var(--text-secondary);border:none;background:none;transition:all .15s}
+.tab.active{background:var(--surface-2);color:var(--text-primary);border:0.5px solid var(--border)}
+.canvas-wrap{background:var(--surface-1);border:0.5px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:1rem}
+canvas{display:block;width:100%}
+.ctrl{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text-secondary);margin-bottom:.5rem}
+.ctrl input[type=range]{flex:1;accent-color:#A855F7}
+.ctrl .val{font-size:13px;font-weight:500;min-width:40px;color:var(--text-primary);font-family:var(--font-mono)}
+.info-box{background:var(--surface-1);border:0.5px solid var(--border);border-radius:8px;padding:.75rem 1rem;font-size:12.5px;color:var(--text-secondary);line-height:1.7;margin-top:.75rem}
+.info-box strong{color:var(--text-primary);font-weight:500}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:.5rem;font-size:12px;color:var(--text-secondary)}
+.leg{display:flex;align-items:center;gap:5px}
+.leg-line{width:22px;height:3px;border-radius:2px}
+.leg-dot{width:10px;height:10px;border-radius:50%}
+</style>
+
+<div class="root">
+  <div class="tabs">
+    <button class="tab active" onclick="setTab(0,this)">Sin restricciones</button>
+    <button class="tab" onclick="setTab(1,this)">Con restricción</button>
+    <button class="tab" onclick="setTab(2,this)">Margen SVM</button>
+  </div>
+
+  <div class="ctrl">
+    <span style="min-width:110px">Learning rate α</span>
+    <input type="range" min="1" max="30" value="12" id="lr-slider" oninput="resetAnim()">
+    <span class="val" id="lr-val">0.12</span>
+  </div>
+
+  <div class="canvas-wrap">
+    <canvas id="cv" height="340"></canvas>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div style="display:flex;gap:8px;margin-bottom:.75rem">
+    <button onclick="resetAnim()" style="font-size:12px;padding:5px 14px">↺ Reiniciar</button>
+    <button onclick="toggleAnim()" id="play-btn" style="font-size:12px;padding:5px 14px">⏸ Pausar</button>
+  </div>
+
+  <div class="info-box" id="info-box"></div>
+</div>
+
+<script>
+const PURPLE='#A855F7', TEAL='#1D9E75', ORANGE='#D85A30', BLUE='#378ADD', GRAY='#888780';
+
+let tab=0, frame=0, running=true, rafId=null;
+
+const W=640, H=340;
+const PAD={l:55,r:20,t:20,b:40};
+const PW=W-PAD.l-PAD.r, PH=H-PAD.t-PAD.b;
+
+function px(x,xmin,xmax){return PAD.l+(x-xmin)/(xmax-xmin)*PW;}
+function py(y,ymin,ymax){return PAD.t+(1-(y-ymin)/(ymax-ymin))*PH;}
+
+function getLR(){return parseFloat(document.getElementById('lr-slider').value)/100;}
+
+const cv=()=>document.getElementById('cv');
+const ctx=()=>cv().getContext('2d');
+
+function setupCanvas(){
+  const el=cv();
+  el.width=W; el.height=H;
+}
+
+function drawAxes(c,xmin,xmax,ymin,ymax,xlabel,ylabel){
+  c.strokeStyle='rgba(136,135,128,0.4)'; c.lineWidth=0.5;
+  for(let i=Math.ceil(xmin);i<=xmax;i++){
+    c.beginPath();c.moveTo(px(i,xmin,xmax),PAD.t);c.lineTo(px(i,xmin,xmax),PAD.t+PH);c.stroke();
+  }
+  for(let j=Math.ceil(ymin);j<=ymax;j++){
+    c.beginPath();c.moveTo(PAD.l,py(j,ymin,ymax));c.lineTo(PAD.l+PW,py(j,ymin,ymax));c.stroke();
+  }
+  c.strokeStyle='rgba(136,135,128,0.7)'; c.lineWidth=1;
+  c.beginPath();c.moveTo(PAD.l,PAD.t);c.lineTo(PAD.l,PAD.t+PH);c.stroke();
+  c.beginPath();c.moveTo(PAD.l,PAD.t+PH);c.lineTo(PAD.l+PW,PAD.t+PH);c.stroke();
+  c.fillStyle='rgba(136,135,128,0.9)'; c.font='11px monospace'; c.textAlign='center';
+  for(let i=xmin;i<=xmax;i+=Math.ceil((xmax-xmin)/5)){
+    c.fillText(i.toFixed(0), px(i,xmin,xmax), PAD.t+PH+16);
+  }
+  c.textAlign='right';
+  for(let j=ymin;j<=ymax;j+=Math.ceil((ymax-ymin)/5)){
+    c.fillText(j.toFixed(0), PAD.l-6, py(j,ymin,ymax)+4);
+  }
+  c.fillStyle='rgba(200,200,200,0.7)'; c.textAlign='center';
+  c.fillText(xlabel, PAD.l+PW/2, H-6);
+  c.save();c.translate(14,PAD.t+PH/2);c.rotate(-Math.PI/2);
+  c.fillText(ylabel,0,0);c.restore();
+}
+
+function drawContours(c,fn,xmin,xmax,ymin,ymax,nlevels=12){
+  const steps=80, dx=(xmax-xmin)/steps, dy=(ymax-ymin)/steps;
+  const vals=[];
+  for(let i=0;i<=steps;i++) for(let j=0;j<=steps;j++) vals.push(fn(xmin+i*dx,ymin+j*dy));
+  const mn=Math.min(...vals), mx=Math.max(...vals);
+  const levels=Array.from({length:nlevels},(_,i)=>mn+(mx-mn)*(i+1)/nlevels);
+  levels.forEach((lv,li)=>{
+    const alpha=0.12+0.06*(li/nlevels);
+    c.strokeStyle=`rgba(168,85,247,${alpha})`; c.lineWidth=0.8;
+    for(let i=0;i<steps;i++){
+      for(let j=0;j<steps;j++){
+        const v00=fn(xmin+i*dx,    ymin+j*dy);
+        const v10=fn(xmin+(i+1)*dx,ymin+j*dy);
+        const v01=fn(xmin+i*dx,    ymin+(j+1)*dy);
+        const v11=fn(xmin+(i+1)*dx,ymin+(j+1)*dy);
+        const cross=v=>(v<lv?0:1);
+        if([cross(v00),cross(v10),cross(v01),cross(v11)].some((v,_,a)=>v!==a[0])){
+          const t=(lv-v00)/(v10-v00+1e-10);
+          const x1=px(xmin+i*dx+t*dx,xmin,xmax);
+          const y1=py(ymin+j*dy,ymin,ymax);
+          c.beginPath();c.moveTo(x1,y1);
+          c.lineTo(px(xmin+(i+.5)*dx,xmin,xmax),py(ymin+(j+.5)*dy,ymin,ymax));
+          c.stroke();
+        }
+      }
+    }
+  });
+}
+
+function arrow(c,x1,y1,x2,y2,color,w=2){
+  c.strokeStyle=color; c.fillStyle=color; c.lineWidth=w;
+  c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();
+  const ang=Math.atan2(y2-y1,x2-x1);
+  c.beginPath();
+  c.moveTo(x2,y2);
+  c.lineTo(x2-8*Math.cos(ang-0.4),y2-8*Math.sin(ang-0.4));
+  c.lineTo(x2-8*Math.cos(ang+0.4),y2-8*Math.sin(ang+0.4));
+  c.closePath();c.fill();
+}
+
+// ── TAB 0: Sin restricciones ─────────────────────────────────────────────────
+let traj0=[];
+function initTraj0(){
+  const alpha=getLR();
+  let p=[3,2.5]; traj0=[[...p]];
+  for(let i=0;i<60;i++){
+    const gx=2*p[0], gy=4*p[1];
+    p=[p[0]-alpha*gx, p[1]-alpha*gy];
+    traj0.push([...p]);
+  }
+}
+
+function drawTab0(c,fr){
+  const xmin=-3.5,xmax=3.5,ymin=-3,ymax=3;
+  c.clearRect(0,0,W,H);
+  c.fillStyle='#111827'; c.fillRect(0,0,W,H);
+
+  // Contornos
+  drawContours(c,(x,y)=>x*x+2*y*y,xmin,xmax,ymin,ymax);
+  drawAxes(c,xmin,xmax,ymin,ymax,'x','y');
+
+  // Mínimo
+  c.beginPath();c.arc(px(0,xmin,xmax),py(0,ymin,ymax),7,0,Math.PI*2);
+  c.fillStyle=TEAL;c.fill();
+  c.fillStyle='rgba(29,158,117,0.2)';c.beginPath();
+  c.arc(px(0,xmin,xmax),py(0,ymin,ymax),18,0,Math.PI*2);c.fill();
+
+  const n=Math.min(fr,traj0.length-1);
+
+  // Flechas de gradiente cada 8 pasos
+  for(let i=0;i<n;i+=8){
+    const [x,y]=traj0[i];
+    const gx=2*x*0.4, gy=4*y*0.4;
+    const x1=px(x,xmin,xmax), y1=py(y,ymin,ymax);
+    const x2=px(x-getLR()*gx,xmin,xmax), y2=py(y-getLR()*gy,ymin,ymax);
+    c.globalAlpha=0.4;
+    arrow(c,x1,y1,x2,y2,'rgba(255,255,255,0.5)',1);
+    c.globalAlpha=1;
+  }
+
+  // Trayectoria
+  if(n>0){
+    c.strokeStyle=PURPLE; c.lineWidth=2.5; c.setLineDash([]);
+    c.beginPath();c.moveTo(px(traj0[0][0],xmin,xmax),py(traj0[0][1],ymin,ymax));
+    for(let i=1;i<=n;i++) c.lineTo(px(traj0[i][0],xmin,xmax),py(traj0[i][1],ymin,ymax));
+    c.stroke();
+    // Punto actual
+    const [cx,cy]=traj0[n];
+    c.beginPath();c.arc(px(cx,xmin,xmax),py(cy,ymin,ymax),7,0,Math.PI*2);
+    c.fillStyle=ORANGE;c.fill();
+    // Label
+    c.fillStyle='rgba(255,255,255,0.85)'; c.font='11px monospace'; c.textAlign='left';
+    c.fillText(`f=${(cx*cx+2*cy*cy).toFixed(3)}`, px(cx,xmin,xmax)+10, py(cy,ymin,ymax)-4);
+  }
+  // Inicio
+  c.beginPath();c.arc(px(traj0[0][0],xmin,xmax),py(traj0[0][1],ymin,ymax),7,0,Math.PI*2);
+  c.fillStyle='rgba(255,255,255,0.6)';c.fill();
+
+  document.getElementById('legend').innerHTML=`
+    <div class="leg"><div class="leg-dot" style="background:rgba(255,255,255,0.6)"></div>Inicio (3, 2.5)</div>
+    <div class="leg"><div class="leg-line" style="background:${PURPLE}"></div>Trayectoria GD</div>
+    <div class="leg"><div class="leg-dot" style="background:${ORANGE}"></div>Posición actual</div>
+    <div class="leg"><div class="leg-dot" style="background:${TEAL}"></div>Mínimo (0, 0)</div>`;
+
+  document.getElementById('info-box').innerHTML=
+    `<strong>f(x,y) = x² + 2y²</strong> — paraboloide elíptico.<br>
+    Gradiente: ∇f = [2x, 4y]. El descenso sigue la dirección opuesta al gradiente.<br>
+    <strong>No hay nada que impida llegar al (0,0)</strong> — la solución puede ser cualquier número real.`;
+}
+
+// ── TAB 1: Con restricción ───────────────────────────────────────────────────
+let traj1=[];
+function initTraj1(){
+  const alpha=getLR();
+  // Restriccion: x + y >= 2  (mínimo libre en 0,0 está FUERA)
+  let p=[0.2,0.1]; traj1=[[...p]];
+  for(let i=0;i<80;i++){
+    let [x,y]=p;
+    let gx=2*x, gy=4*y;
+    let nx=x-alpha*gx, ny=y-alpha*gy;
+    // Proyectar sobre la restriccion x+y=2 si estamos fuera
+    if(nx+ny<2){
+      // Proyeccion del gradiente sobre la restriccion g(x,y)=x+y-2=0
+      // grad_g=[1,1], proyectar -grad_f sobre el complemento de grad_g
+      const gn=[gx,gy];
+      const lng=1/Math.sqrt(2);
+      const proj=(gn[0]*lng+gn[1]*lng); // componente sobre grad_g
+      const tang=[gn[0]-proj*lng, gn[1]-proj*lng];
+      nx=x-alpha*tang[0]; ny=y-alpha*tang[1];
+      if(nx+ny<2){const s=(2-(nx+ny))/2; nx+=s;ny+=s;}
+    }
+    p=[nx,ny]; traj1.push([...p]);
+  }
+}
+
+function drawTab1(c,fr){
+  const xmin=-0.5,xmax=3.5,ymin=-0.5,ymax=3;
+  c.clearRect(0,0,W,H);
+  c.fillStyle='#111827'; c.fillRect(0,0,W,H);
+
+  drawContours(c,(x,y)=>x*x+2*y*y,xmin,xmax,ymin,ymax);
+  drawAxes(c,xmin,xmax,ymin,ymax,'x','y');
+
+  // Zona factible (x+y>=2) — sombreado
+  c.fillStyle='rgba(29,158,117,0.12)';
+  c.beginPath();
+  const pts=[[2,0],[xmax,0],[xmax,ymax],[0,ymax],[0,2]];
+  pts.forEach(([x,y],i)=>{
+    const fx=px(x,xmin,xmax), fy=py(y,ymin,ymax);
+    i===0?c.moveTo(fx,fy):c.lineTo(fx,fy);
+  });
+  c.closePath();c.fill();
+
+  // Borde de restriccion
+  c.strokeStyle=TEAL; c.lineWidth=2; c.setLineDash([6,4]);
+  c.beginPath();
+  c.moveTo(px(2,xmin,xmax),py(0,ymin,ymax));
+  c.lineTo(px(0,xmin,xmax),py(2,ymin,ymax));
+  c.stroke(); c.setLineDash([]);
+
+  // Label restricción
+  c.fillStyle=TEAL; c.font='11px monospace'; c.textAlign='center';
+  c.fillText('x + y = 2', px(1,xmin,xmax)+20, py(1,ymin,ymax)-8);
+
+  // Mínimo irrestricto
+  c.beginPath();c.arc(px(0,xmin,xmax),py(0,ymin,ymax),7,0,Math.PI*2);
+  c.fillStyle='rgba(136,135,128,0.5)';c.fill();
+  c.fillStyle='rgba(200,200,200,0.7)'; c.font='11px monospace'; c.textAlign='left';
+  c.fillText('mínimo libre (0,0)', px(0,xmin,xmax)+10, py(0,ymin,ymax)+4);
+
+  // Mínimo restringido  x*=4/3, y*=2/3
+  const xs=4/3, ys=2/3;
+  c.beginPath();c.arc(px(xs,xmin,xmax),py(ys,ymin,ymax),9,0,Math.PI*2);
+  c.fillStyle=ORANGE; c.fill();
+  c.fillStyle='rgba(216,90,48,0.2)'; c.beginPath();
+  c.arc(px(xs,xmin,xmax),py(ys,ymin,ymax),22,0,Math.PI*2);c.fill();
+  c.fillStyle='rgba(255,255,255,0.85)'; c.textAlign='left';
+  c.fillText(`óptimo restringido\n(4/3, 2/3)`, px(xs,xmin,xmax)+14, py(ys,ymin,ymax)-4);
+
+  const n=Math.min(fr,traj1.length-1);
+  if(n>0){
+    c.strokeStyle=PURPLE; c.lineWidth=2.5;
+    c.beginPath();c.moveTo(px(traj1[0][0],xmin,xmax),py(traj1[0][1],ymin,ymax));
+    for(let i=1;i<=n;i++) c.lineTo(px(traj1[i][0],xmin,xmax),py(traj1[i][1],ymin,ymax));
+    c.stroke();
+    const [cx,cy]=traj1[n];
+    c.beginPath();c.arc(px(cx,xmin,xmax),py(cy,ymin,ymax),7,0,Math.PI*2);
+    c.fillStyle=PURPLE;c.fill();
+  }
+  c.beginPath();c.arc(px(traj1[0][0],xmin,xmax),py(traj1[0][1],ymin,ymax),6,0,Math.PI*2);
+  c.fillStyle='rgba(255,255,255,0.5)';c.fill();
+
+  document.getElementById('legend').innerHTML=`
+    <div class="leg"><div class="leg-line" style="background:${TEAL};border-top:2px dashed ${TEAL}"></div>Restricción activa x+y=2</div>
+    <div class="leg"><div class="leg-line" style="background:${PURPLE}"></div>Trayectoria proyectada</div>
+    <div class="leg"><div class="leg-dot" style="background:${ORANGE}"></div>Óptimo restringido (4/3, 2/3)</div>
+    <div class="leg"><div class="leg-dot" style="background:rgba(136,135,128,0.5)"></div>Mínimo libre (0,0) — fuera</div>`;
+
+  document.getElementById('info-box').innerHTML=
+    `<strong>Restricción activa:</strong> x + y ≥ 2  (zona verde).<br>
+    El mínimo libre (0,0) está <strong>fuera</strong> de la zona permitida → la solución se pega al borde.<br>
+    El λ de Lagrange > 0: la restricción está <strong>empujando</strong> la solución.<br>
+    En SVM: los vectores de soporte son exactamente los puntos donde λ > 0.`;
+}
+
+// ── TAB 2: Margen SVM ────────────────────────────────────────────────────────
+function drawTab2(c){
+  c.clearRect(0,0,W,H);
+  c.fillStyle='#111827'; c.fillRect(0,0,W,H);
+
+  const xmin=0,xmax=10,ymin=0,ymax=8;
+  drawAxes(c,xmin,xmax,ymin,ymax,'Temperatura (norm)','Vibración (norm)');
+
+  // Datos clase 0 (teal)
+  const pts0=[[1.5,4.5],[2,5.5],[1.8,3.8],[2.5,5],[3,4.2],[2.2,6],[3.5,5.5]];
+  // Datos clase 1 (orange)
+  const pts1=[[6,3],[7,2],[6.5,1.5],[7.5,2.5],[8,3.5],[6.8,1.2],[7.2,3.8]];
+
+  // Zona del margen
+  c.fillStyle='rgba(168,85,247,0.08)';
+  c.beginPath();
+  c.moveTo(px(3.5,xmin,xmax),py(ymax,ymin,ymax));
+  c.lineTo(px(6.5,xmin,xmax),py(ymax,ymin,ymax));
+  c.lineTo(px(5.5,xmin,xmax),py(ymin,ymin,ymax));
+  c.lineTo(px(2.5,xmin,xmax),py(ymin,ymin,ymax));
+  c.closePath();c.fill();
+
+  // Márgenes (punteado)
+  c.strokeStyle='rgba(168,85,247,0.5)'; c.lineWidth=1.5; c.setLineDash([5,4]);
+  c.beginPath();c.moveTo(px(3.5,xmin,xmax),py(ymax,ymin,ymax));c.lineTo(px(2.5,xmin,xmax),py(ymin,ymin,ymax));c.stroke();
+  c.beginPath();c.moveTo(px(6.5,xmin,xmax),py(ymax,ymin,ymax));c.lineTo(px(5.5,xmin,xmax),py(ymin,ymin,ymax));c.stroke();
+  c.setLineDash([]);
+
+  // Hiperplano
+  c.strokeStyle=PURPLE; c.lineWidth=2.5;
+  c.beginPath();c.moveTo(px(5,xmin,xmax),py(ymax,ymin,ymax));c.lineTo(px(4,xmin,xmax),py(ymin,ymin,ymax));c.stroke();
+
+  // Puntos
+  pts0.forEach(([x,y])=>{
+    c.beginPath();c.arc(px(x,xmin,xmax),py(y,ymin,ymax),6,0,Math.PI*2);
+    c.fillStyle=TEAL;c.fill();
+  });
+  pts1.forEach(([x,y])=>{
+    c.beginPath();c.arc(px(x,xmin,xmax),py(y,ymin,ymax),6,0,Math.PI*2);
+    c.fillStyle=ORANGE;c.fill();
+  });
+
+  // Vectores de soporte (círculo exterior)
+  [[3,4.2],[2.5,5],[6,3],[7,2]].forEach(([x,y])=>{
+    c.beginPath();c.arc(px(x,xmin,xmax),py(y,ymin,ymax),12,0,Math.PI*2);
+    c.strokeStyle='white';c.lineWidth=2;c.stroke();
+  });
+
+  // Flecha doble del margen
+  const mx=px(5,xmin,xmax), my=py(4,ymin,ymax);
+  c.strokeStyle=PURPLE;c.lineWidth=1.5;
+  c.beginPath();c.moveTo(px(3.6,xmin,xmax),my);c.lineTo(px(5.9,xmin,xmax),my);c.stroke();
+  c.fillStyle='rgba(255,255,255,0.85)'; c.font='11px monospace'; c.textAlign='center';
+  c.fillText('2/‖w‖  (margen)', mx, my-10);
+
+  // Labels
+  c.fillStyle=TEAL; c.font='11px monospace'; c.textAlign='left';
+  c.fillText('Normal', px(1,xmin,xmax)+5, py(6.5,ymin,ymax));
+  c.fillStyle=ORANGE;
+  c.fillText('Falla', px(7.5,xmin,xmax), py(4.5,ymin,ymax));
+  c.fillStyle='rgba(168,85,247,0.9)'; c.textAlign='center';
+  c.fillText('w·x + b = 0', px(4.5,xmin,xmax), py(7.5,ymin,ymax));
+  c.fillStyle='rgba(255,255,255,0.5)'; c.font='10px monospace'; c.textAlign='center';
+  c.fillText('Vectores de soporte (λᵢ > 0)', px(5,xmin,xmax), py(0.4,ymin,ymax));
+
+  document.getElementById('legend').innerHTML=`
+    <div class="leg"><div class="leg-line" style="background:${PURPLE}"></div>Hiperplano óptimo w·x+b=0</div>
+    <div class="leg"><div class="leg-line" style="background:rgba(168,85,247,0.4);border-top:1.5px dashed rgba(168,85,247,0.7)"></div>Márgenes ±1</div>
+    <div class="leg"><div class="leg-dot" style="background:${TEAL}"></div>Normal</div>
+    <div class="leg"><div class="leg-dot" style="background:${ORANGE}"></div>Falla</div>
+    <div class="leg"><div class="leg-dot" style="background:none;border:2px solid white;border-radius:50%;width:10px;height:10px"></div>Vectores de soporte</div>`;
+
+  document.getElementById('info-box').innerHTML=
+    `<strong>SVM minimiza ½‖w‖²</strong> (equivale a maximizar el margen 2/‖w‖).<br>
+    La restricción: y_i(w·x_i + b) ≥ 1 para todo punto i.<br>
+    Solo los puntos con <strong>círculo blanco</strong> (λ_i > 0) definen el hiperplano.<br>
+    El resto tiene λ_i = 0 — no importan aunque se muevan (dentro del margen).`;
+}
+
+// ── Animación ────────────────────────────────────────────────────────────────
+function render(){
+  const c=ctx();
+  if(tab===0) drawTab0(c,frame);
+  else if(tab===1) drawTab1(c,frame);
+  else drawTab2(c);
+  if(running){
+    const maxFr=tab===0?traj0.length:tab===1?traj1.length:1;
+    if(frame<maxFr-1) frame++;
+  }
+  rafId=requestAnimationFrame(render);
+}
+
+function resetAnim(){
+  document.getElementById('lr-val').textContent=getLR().toFixed(2);
+  frame=0;
+  if(tab===0) initTraj0();
+  else if(tab===1) initTraj1();
+}
+
+function toggleAnim(){
+  running=!running;
+  document.getElementById('play-btn').textContent=running?'⏸ Pausar':'▶ Reanudar';
+}
+
+function setTab(t,el){
+  tab=t; frame=0; running=true;
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',i===t));
+  document.getElementById('play-btn').textContent='⏸ Pausar';
+  if(t===0) initTraj0();
+  else if(t===1) initTraj1();
+}
+
+setupCanvas();
+initTraj0();
+render();
+</script>
+
+</main>
+</body>
+</html>
